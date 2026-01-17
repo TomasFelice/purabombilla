@@ -41,6 +41,7 @@ export interface Database {
                     slug: string
                     featured: boolean | null
                     created_at: string
+                    updated_at: string | null
                 }
                 Insert: {
                     id?: string
@@ -53,6 +54,7 @@ export interface Database {
                     slug: string
                     featured?: boolean | null
                     created_at?: string
+                    updated_at?: string | null
                 }
                 Update: {
                     id?: string
@@ -65,6 +67,7 @@ export interface Database {
                     slug?: string
                     featured?: boolean | null
                     created_at?: string
+                    updated_at?: string | null
                 }
             }
             orders: {

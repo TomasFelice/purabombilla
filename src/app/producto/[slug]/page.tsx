@@ -12,8 +12,47 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel"
+import type { Metadata, ResolvingMetadata } from 'next'
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+type Props = {
+    params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata(
+    { params }: Props,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    const { slug } = await params
+    const supabase = await createClient()
+
+    const { data: productData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+
+    if (!productData) {
+        return {
+            title: 'Producto no encontrado | purabombilla',
+        }
+    }
+
+    // Cast to any to avoid TS errors
+    const product = productData as any
+
+    const previousImages = (await parent).openGraph?.images || []
+    const productImages = product.images || (product.image_url ? [product.image_url] : [])
+
+    return {
+        title: product.name,
+        description: product.description || `Comprá ${product.name} en purabombilla. Calidad premium y envíos a todo el país.`,
+        openGraph: {
+            images: [...productImages, ...previousImages],
+        },
+    }
+}
+
+export default async function ProductPage({ params }: Props) {
     const { slug } = await params
     const supabase = await createClient()
 
@@ -47,6 +86,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'Product',
+                        name: product.name,
+                        description: product.description,
+                        image: product.images,
+                        offers: {
+                            '@type': 'Offer',
+                            price: product.price,
+                            priceCurrency: 'ARS',
+                            availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                        },
+                    }),
+                }}
+            />
             <Navbar />
             <main className="flex-1 container mx-auto px-4 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

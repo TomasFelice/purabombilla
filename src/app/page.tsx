@@ -1,10 +1,15 @@
-
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/product/product-card"
 import { Navbar } from "@/components/layout/navbar"
 import { Footer } from "@/components/layout/footer"
 import { createClient } from "@/lib/supabase-server"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "purabombilla | Mates y Accesorios Premium",
+  description: "Descubrí nuestra selección exclusiva de mates, bombillas y accesorios de diseño. Envíos a todo el país.",
+}
 
 export default async function Home() {
   const supabase = await createClient()

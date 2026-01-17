@@ -31,7 +31,7 @@ export async function getPublicOrder(orderId: string) {
 
     // First, try a joined query assuming relations are set up.
     // We select specific fields to avoid leaking sensitive data (though createClient is server-side, returning all data to client might be bad).
-    const { data: order, error } = await supabase
+    const { data, error } = await supabase
         .from('orders')
         .select(`
             id,
@@ -51,6 +51,8 @@ export async function getPublicOrder(orderId: string) {
         `)
         .eq('id', orderId)
         .single()
+
+    const order = data as any
 
     if (error) {
         console.error('Error fetching order:', error)

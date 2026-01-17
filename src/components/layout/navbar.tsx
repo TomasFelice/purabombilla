@@ -4,6 +4,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Menu } from "lucide-react"
+import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { CartSheet } from "@/components/cart/cart-sheet"
@@ -45,7 +46,9 @@ export function Navbar() {
                 {/* Mobile Nav & Cart */}
                 <div className="flex items-center gap-2">
                     <div className="hidden md:flex relative w-64 mr-2">
-                        <SearchBar />
+                        <Suspense fallback={<div className="w-full h-9 bg-muted rounded-md" />}>
+                            <SearchBar />
+                        </Suspense>
                     </div>
 
                     <CartSheet />
@@ -61,7 +64,9 @@ export function Navbar() {
                                 <SheetTitle className="text-primary font-bold">Menú</SheetTitle>
                             </SheetHeader>
                             <div className="flex flex-col gap-4 mt-8 px-4">
-                                <SearchBar />
+                                <Suspense>
+                                    <SearchBar />
+                                </Suspense>
                                 <Link href="/productos" className="text-lg font-medium hover:text-primary transition">Catálogo Completo</Link>
                                 <Link href="/productos?category=mates" className="text-lg font-medium hover:text-primary transition">Mates</Link>
                                 <Link href="/productos?category=bombillas" className="text-lg font-medium hover:text-primary transition">Bombillas</Link>

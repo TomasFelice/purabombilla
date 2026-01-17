@@ -15,8 +15,32 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "purabombilla | Mates y Accesorios Premium",
-  description: "Tienda online de mates, bombillas y accesorios de diseño en Argentina.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://purabombilla.com"),
+  title: {
+    default: "purabombilla | Mates y Accesorios Premium",
+    template: "%s | purabombilla",
+  },
+  description: "Tienda online de mates, bombillas y accesorios de diseño en Argentina. Calidad premium y envíos a todo el país.",
+  keywords: ["mate", "bombilla", "yerba", "argentina", "diseño", "premium", "accesorios", "regalos"],
+  authors: [{ name: "purabombilla" }],
+  creator: "purabombilla",
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: "/",
+    title: "purabombilla | Mates y Accesorios Premium",
+    description: "Tienda online de mates, bombillas y accesorios de diseño en Argentina.",
+    siteName: "purabombilla",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "purabombilla | Mates y Accesorios Premium",
+    description: "Tienda online de mates, bombillas y accesorios de diseño en Argentina.",
+    creator: "@purabombilla",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
