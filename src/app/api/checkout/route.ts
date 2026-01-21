@@ -75,6 +75,28 @@ export async function POST(request: Request) {
             console.error('Error creating order items:', itemsError)
         }
 
+        // 3.5 Deduct Stock
+        // 3.5 Deduct Stock
+        for (const item of cart) {
+            // Get current stock
+            const { data: product, error: fetchError } = await supabase
+                .from('products')
+                .select('stock')
+                .eq('id', item.id)
+                .single()
+
+            if (product && !fetchError) {
+                // @ts-ignore
+                const currentStock = product.stock || 0
+                const newStock = currentStock - item.quantity
+
+                await supabase
+                    .from('products')
+                    .update({ stock: newStock } as any)
+                    .eq('id', item.id)
+            }
+        }
+
         // 4. Format Message for Telegram
         const itemsList = cart.map((item: any) => `- ${item.quantity}x ${item.name} ($${item.price})`).join('\n')
         const message = `

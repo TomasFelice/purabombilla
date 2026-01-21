@@ -24,6 +24,7 @@ interface Product {
     category: string
     slug: string
     featured?: boolean
+    stock?: number
 }
 
 interface ProductCardProps {
@@ -46,7 +47,8 @@ export function ProductCard({ product }: ProductCardProps) {
             price: product.price,
             image: product.image,
             quantity: 1,
-            slug: product.slug
+            slug: product.slug,
+            stock: product.stock
         })
     }
 
@@ -59,7 +61,8 @@ export function ProductCard({ product }: ProductCardProps) {
             price: product.price,
             image: product.image,
             quantity: 1,
-            slug: product.slug
+            slug: product.slug,
+            stock: product.stock
         })
     }
 
@@ -74,6 +77,8 @@ export function ProductCard({ product }: ProductCardProps) {
             }
         }
     }
+
+    const isPreOrder = (product.stock ?? 0) <= 0
 
     return (
         <Link href={`/producto/${product.slug}`} className="group block">
@@ -119,9 +124,15 @@ export function ProductCard({ product }: ProductCardProps) {
                     <Badge className="absolute left-2 top-2 bg-black/80 text-white hover:bg-black/80 pointer-events-none z-10">Destacado</Badge>
                 )}
 
+                {isPreOrder && (
+                    <Badge variant="secondary" className="absolute right-2 top-2 bg-blue-100 text-blue-800 hover:bg-blue-100 pointer-events-none z-10 font-medium border-blue-200">
+                        Por encargue
+                    </Badge>
+                )}
+
                 {/* Overlay cart counter if in cart */}
                 {quantityInCart > 0 && (
-                    <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
+                    <div className="absolute bottom-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
                         {quantityInCart}
                     </div>
                 )}

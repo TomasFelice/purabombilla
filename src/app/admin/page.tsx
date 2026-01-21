@@ -5,15 +5,20 @@ import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Package, ShoppingBag } from "lucide-react"
+import { Plus, Package, ShoppingBag, Trash, Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { getOrderStatusLabel } from "@/lib/utils"
 import Link from "next/link"
+import { deleteProduct } from "@/lib/actions/product-actions"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 export default function AdminDashboard() {
     const [products, setProducts] = useState<any[]>([])
     const [orders, setOrders] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [productToDelete, setProductToDelete] = useState<any>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,6 +40,26 @@ export default function AdminDashboard() {
 
         fetchData()
     }, [])
+
+    const handleDeleteProduct = async () => {
+        if (!productToDelete) return
+
+        setIsDeleting(true)
+        try {
+            const result = await deleteProduct(productToDelete.id)
+            if (result?.error) {
+                toast.error(result.error)
+            } else {
+                setProducts(products.filter(p => p.id !== productToDelete.id))
+                toast.success("Producto eliminado correctamente")
+                setProductToDelete(null)
+            }
+        } catch (error) {
+            toast.error("Error al eliminar el producto")
+        } finally {
+            setIsDeleting(false)
+        }
+    }
 
     return (
         <div className="flex flex-col min-h-screen">
@@ -92,6 +117,14 @@ export default function AdminDashboard() {
                                                         <div className="font-medium text-foreground">${product.price.toLocaleString('es-AR')}</div>
                                                         <Button variant="outline" size="sm" asChild>
                                                             <a href={`/admin/products/${product.id}/edit`}>Editar</a>
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => setProductToDelete(product)}
+                                                        >
+                                                            <Trash className="h-4 w-4" />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -153,6 +186,24 @@ export default function AdminDashboard() {
                     </Tabs>
                 </div>
             </main>
+
+            <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>¿Estás seguro?</DialogTitle>
+                        <DialogDescription>
+                            Esta acción no se puede deshacer. Esto eliminará permanentemente el producto "{productToDelete?.name}" de la base de datos.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setProductToDelete(null)} disabled={isDeleting}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDeleteProduct} disabled={isDeleting}>
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Eliminar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useId } from "react"
 import { useRouter } from "next/navigation"
-import { createProduct, updateProduct, uploadProductImage } from "@/lib/actions/product-actions"
+import { createProduct, updateProduct, uploadProductImage, deleteProduct } from "@/lib/actions/product-actions"
 import { generateProductDescription } from "@/lib/actions/ai-actions"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -37,7 +37,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { Loader2, Upload, Wand2, X, GripVertical } from "lucide-react"
+import { Loader2, Upload, Wand2, X, GripVertical, Trash } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 
@@ -117,6 +117,7 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
     const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
     const [contextOpen, setContextOpen] = useState(false)
     const [additionalContext, setAdditionalContext] = useState("")
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
     // Initialize gallery items from initial data
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
@@ -145,6 +146,8 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
 
         return items
     })
+
+    const id = useId()
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -254,6 +257,26 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
         setGalleryItems(prev => prev.filter(item => item.id !== id))
     }
 
+    const handleDelete = async () => {
+        if (!initialData?.id) return
+
+        setLoading(true)
+        try {
+            const result = await deleteProduct(initialData.id)
+            if (result?.error) {
+                toast.error(result.error)
+            } else {
+                toast.success("Producto eliminado correctamente")
+                router.push('/admin')
+            }
+        } catch (error) {
+            toast.error("Error al eliminar el producto")
+        } finally {
+            setLoading(false)
+            setDeleteDialogOpen(false)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -268,9 +291,8 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
             }
 
             // Process images
-            const finalImageUrls: string[] = []
-
-            for (const item of galleryItems) {
+            // Process images in parallel
+            const uploadPromises = galleryItems.map(async (item) => {
                 if (item.file) {
                     // Upload new file
                     const imageFormData = new FormData()
@@ -280,17 +302,22 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
 
                     if (result.error) {
                         console.error("Upload error:", result.error)
-                        toast.error(`Error subiendo imagen`)
-                        continue
+                        toast.error(`Error subiendo imagen: ${item.file.name}`)
+                        return null
                     }
 
-                    if (result.url) {
-                        finalImageUrls.push(result.url)
-                    }
+                    return result.url
                 } else {
                     // Keep existing URL
-                    finalImageUrls.push(item.url)
+                    return item.url
                 }
+            })
+
+            const uploadResults = await Promise.all(uploadPromises)
+            const finalImageUrls = uploadResults.filter((url): url is string => url !== null)
+
+            if (finalImageUrls.length < galleryItems.length) {
+                toast.warning("Algunas imágenes no se pudieron subir")
             }
 
             // Set main image to the first one in the ordered list
@@ -462,6 +489,7 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
 
                                 {galleryItems.length > 0 ? (
                                     <DndContext
+                                        id={id}
                                         sensors={sensors}
                                         collisionDetection={closestCenter}
                                         onDragEnd={handleDragEnd}
@@ -505,12 +533,28 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
                             <Label htmlFor="featured">Producto Destacado</Label>
                         </div>
 
-                        <div className="flex justify-end gap-4 pt-4">
-                            <Button type="button" variant="ghost" onClick={() => router.back()}>Cancelar</Button>
-                            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
-                                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {initialData ? "Guardar Cambios" : "Crear Producto"}
-                            </Button>
+                        <div className="flex justify-between items-center pt-4">
+                            {initialData?.id ? (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={() => setDeleteDialogOpen(true)}
+                                    disabled={loading}
+                                >
+                                    <Trash className="mr-2 h-4 w-4" />
+                                    Eliminar Producto
+                                </Button>
+                            ) : (
+                                <div></div>
+                            )}
+
+                            <div className="flex gap-4">
+                                <Button type="button" variant="ghost" onClick={() => router.back()}>Cancelar</Button>
+                                <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
+                                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {initialData ? "Guardar Cambios" : "Crear Producto"}
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </CardContent>
@@ -537,6 +581,24 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
                         <Button variant="outline" onClick={() => setContextOpen(false)}>Cancelar</Button>
                         <Button onClick={confirmGenerateDescription} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                             <Wand2 className="mr-2 h-4 w-4" /> Generar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>¿Estás seguro?</DialogTitle>
+                        <DialogDescription>
+                            Esta acción no se puede deshacer. Esto eliminará permanentemente el producto "{formData.name}" de la base de datos.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={loading}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Eliminar
                         </Button>
                     </DialogFooter>
                 </DialogContent>

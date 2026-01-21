@@ -12,6 +12,7 @@ interface Product {
     price: number
     image: string
     slug: string
+    stock?: number
 }
 
 export function AddToCartForm({ product }: { product: Product }) {
@@ -32,7 +33,8 @@ export function AddToCartForm({ product }: { product: Product }) {
             price: product.price,
             image: product.image,
             quantity: localQuantity,
-            slug: product.slug
+            slug: product.slug,
+            stock: product.stock
         })
     }
 
@@ -46,7 +48,8 @@ export function AddToCartForm({ product }: { product: Product }) {
                 price: product.price,
                 image: product.image,
                 quantity: 1, // Add 1
-                slug: product.slug
+                slug: product.slug,
+                stock: product.stock
             })
         } else {
             setLocalQuantity(q => q + 1)
@@ -65,6 +68,10 @@ export function AddToCartForm({ product }: { product: Product }) {
         }
     }
 
+    // Check if backorder is needed
+    // Condition: stock <= 0 (always backorder) OR requested quantity > available stock
+    const isBackorderNeeded = (product.stock ?? 0) <= 0 || quantityToDisplay > (product.stock ?? 0)
+
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
@@ -81,6 +88,12 @@ export function AddToCartForm({ product }: { product: Product }) {
                 {quantityInCart > 0 && <span className="text-sm text-green-600 font-medium animate-in fade-in">¡En tu carrito!</span>}
             </div>
 
+            {isBackorderNeeded && (
+                <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md font-medium border border-blue-100">
+                    ⚠️ {(product.stock ?? 0) <= 0 ? "Producto por encargue. Se coordinará la entrega." : `Solo ${product.stock} en stock. El resto se traerá por encargue.`}
+                </div>
+            )}
+
             {quantityInCart > 0 ? (
                 <Button size="lg" className="w-full md:w-auto bg-green-700 hover:bg-green-800 text-white" asChild>
                     <Link href="/checkout">
@@ -91,7 +104,7 @@ export function AddToCartForm({ product }: { product: Product }) {
             ) : (
                 <Button size="lg" className="w-full md:w-auto bg-green-700 hover:bg-green-800 text-white" onClick={handleAddToCart}>
                     <ShoppingCart className="mr-2 h-5 w-5" />
-                    Agregar al Carrito
+                    {isBackorderNeeded ? "Encargar" : "Agregar al Carrito"}
                 </Button>
             )}
         </div>

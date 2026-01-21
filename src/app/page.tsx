@@ -35,6 +35,7 @@ export default async function Home() {
     category: product.categories?.slug || "general",
     slug: product.slug,
     featured: product.featured || false,
+    stock: product.stock
   })) || []
 
   return (

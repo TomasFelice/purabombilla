@@ -75,6 +75,11 @@ export function CartSheet() {
                                         <div>
                                             <h4 className="text-sm font-medium line-clamp-2">{item.name}</h4>
                                             <div className="text-sm font-semibold mt-1">${item.price.toLocaleString('es-AR')}</div>
+                                            {(item.quantity > (item.stock ?? 0)) && (
+                                                <div className="text-xs text-blue-600 mt-1 font-medium">
+                                                    {(item.stock ?? 0) <= 0 ? "• Se trae por encargue" : "• Parte del pedido se trae por encargue"}
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-2 mt-2">
                                             <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => {

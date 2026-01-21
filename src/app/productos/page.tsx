@@ -52,7 +52,8 @@ export default async function CatalogPage({
         image: p.image_url || "",
         category: p.categories?.slug || "general",
         slug: p.slug,
-        featured: p.featured
+        featured: p.featured,
+        stock: p.stock
     })) || []
 
 

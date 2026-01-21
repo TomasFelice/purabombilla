@@ -9,6 +9,7 @@ export type CartItem = {
     image: string
     quantity: number
     slug: string
+    stock?: number
 }
 
 interface CartStore {

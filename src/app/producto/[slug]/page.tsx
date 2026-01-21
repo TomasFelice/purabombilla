@@ -145,7 +145,11 @@ export default async function ProductPage({ params }: Props) {
 
                         <div className="mt-8 pt-8 border-t border-border text-sm text-muted-foreground">
                             <p className="mb-2">🚚 Envíos a todo el país.</p>
-                            <p>📦 Stock disponible: {product.stock} unidades.</p>
+                            {product.stock > 0 ? (
+                                <p>📦 Stock disponible: {product.stock} unidades.</p>
+                            ) : (
+                                <p className="text-blue-600 font-medium">📦 Disponible por encargue.</p>
+                            )}
                         </div>
                     </div>
                 </div>
