@@ -90,9 +90,9 @@ export async function POST(request: Request) {
                 const currentStock = product.stock || 0
                 const newStock = currentStock - item.quantity
 
-                await supabase
-                    .from('products')
-                    .update({ stock: newStock } as any)
+                await (supabase
+                    .from('products') as any)
+                    .update({ stock: newStock })
                     .eq('id', item.id)
             }
         }
