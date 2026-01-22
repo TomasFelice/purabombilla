@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-// @ts-ignore
 import convert from 'heic-convert'
 
 export async function createProduct(formData: FormData) {
@@ -16,7 +15,16 @@ export async function createProduct(formData: FormData) {
     const category_id = formData.get('category_id') as string
     const description = formData.get('description') as string
     const image_url = formData.get('image_url') as string
-    const images = JSON.parse(formData.get('images') as string || '[]')
+    const imagesStr = formData.get('images') as string
+
+    let images: string[] = []
+    try {
+        images = imagesStr ? JSON.parse(imagesStr) : []
+    } catch (e) {
+        console.error("Error parsing images JSON:", e)
+        images = []
+    }
+
     const cost_price = parseFloat(formData.get('cost_price') as string || '0')
     const featured = formData.get('featured') === 'true'
 
@@ -60,7 +68,18 @@ export async function updateProduct(id: string, formData: FormData) {
     const category_id = formData.get('category_id') as string
     const description = formData.get('description') as string
     const image_url = formData.get('image_url') as string
-    const images = JSON.parse(formData.get('images') as string || '[]')
+
+    const imagesStr = formData.get('images') as string
+    let images: string[] = []
+    try {
+        images = imagesStr ? JSON.parse(imagesStr) : []
+    } catch (e) {
+        console.error("Error parsing images JSON:", e)
+        // If parsing fails, we might want to keep existing or error out. 
+        // For now safe default empty.
+        images = []
+    }
+
     const cost_price = parseFloat(formData.get('cost_price') as string || '0')
     const featured = formData.get('featured') === 'true'
 
@@ -107,12 +126,16 @@ export async function deleteProduct(id: string) {
     revalidatePath('/products')
 }
 
-export async function uploadProductImage(formData: FormData) {
+type UploadResult =
+    | { success: true; url: string }
+    | { success: false; error: string }
+
+export async function uploadProductImage(formData: FormData): Promise<UploadResult> {
     const supabase = await createClient()
     const file = formData.get('file') as File
 
     if (!file) {
-        return { error: 'No file provided' }
+        return { success: false, error: 'No file provided' }
     }
 
     let fileBuffer = Buffer.from(await file.arrayBuffer())
@@ -132,7 +155,7 @@ export async function uploadProductImage(formData: FormData) {
             fileName = fileName.replace(/\.[^/.]+$/, "") + ".jpg";
         } catch (e) {
             console.error("Error converting HEIC:", e);
-            return { error: 'Error converting HEIC image' }
+            return { success: false, error: 'Error converting HEIC image' }
         }
     }
 
@@ -150,12 +173,12 @@ export async function uploadProductImage(formData: FormData) {
 
     if (uploadError) {
         console.error("Upload error:", uploadError)
-        return { error: 'Error uploading image' }
+        return { success: false, error: 'Error uploading image' }
     }
 
     const { data: { publicUrl } } = supabase.storage
         .from('products')
         .getPublicUrl(filePath)
 
-    return { url: publicUrl }
+    return { success: true, url: publicUrl }
 }

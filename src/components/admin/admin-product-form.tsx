@@ -290,7 +290,6 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
                 return
             }
 
-            // Process images
             // Process images in parallel
             const uploadPromises = galleryItems.map(async (item) => {
                 if (item.file) {
@@ -300,7 +299,7 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
 
                     const result = await uploadProductImage(imageFormData)
 
-                    if (result.error) {
+                    if (!result.success) {
                         console.error("Upload error:", result.error)
                         toast.error(`Error subiendo imagen: ${item.file.name}`)
                         return null
@@ -323,8 +322,6 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
             // Set main image to the first one in the ordered list
             const mainImageUrl = finalImageUrls.length > 0 ? finalImageUrls[0] : ""
 
-
-
             const data = new FormData()
             data.append("name", formData.name)
             data.append("slug", formData.slug)
@@ -333,6 +330,7 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
             data.append("category_id", formData.category_id)
             data.append("description", formData.description)
             data.append("image_url", mainImageUrl)
+            // Ensure we strictly stringify the array of strings
             data.append("images", JSON.stringify(finalImageUrls))
             data.append("cost_price", formData.cost_price)
             data.append("featured", String(formData.featured))
@@ -345,11 +343,13 @@ export default function AdminProductForm({ categories, initialData }: ProductFor
             }
 
             if (result?.error) {
-                alert(result.error)
+                toast.error(result.error)
+            } else {
+                toast.success(initialData ? "Producto actualizado" : "Producto creado")
             }
         } catch (error) {
             console.error(error)
-            alert("Ocurrió un error inesperado")
+            toast.error("Ocurrió un error inesperado")
         } finally {
             setLoading(false)
         }
