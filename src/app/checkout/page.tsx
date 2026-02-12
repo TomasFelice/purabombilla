@@ -189,7 +189,7 @@ export default function CheckoutPage() {
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-semibold">Retiro por Local</div>
-                                                <div className="text-xs text-muted-foreground">Zona Norte / CABA</div>
+                                                <div className="text-xs text-muted-foreground">Buenos Aires, La Matanza</div>
                                             </div>
                                         </div>
                                     </div>

@@ -90,12 +90,12 @@ export default async function Home() {
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-4 font-sans">¿Por qué purabombilla?</h2>
             <p className="max-w-2xl mx-auto text-primary-foreground/90 mb-8 font-secondary">
-              Nos dedicamos a curar los mejores productos materos del país, asegurando calidad, diseño y un servicio de entrega eficiente.
+              Nos dedicamos a comercializar los mejores productos materos del país, asegurando calidad, diseño y un servicio de entrega eficiente.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-primary-foreground/80">
               <div>
-                <div className="font-bold text-primary-foreground mb-2">Calidad Premium</div>
-                <p className="text-sm">Seleccionamos materiales duraderos y acabados de lujo.</p>
+                <div className="font-bold text-primary-foreground mb-2">Calidad Asegurada</div>
+                <p className="text-sm">Tenemos una variante para cada bolsillo.</p>
               </div>
               <div>
                 <div className="font-bold text-primary-foreground mb-2">Envío a Todo el País</div>
